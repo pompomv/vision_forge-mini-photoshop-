@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mini Photoshop - Aplikasi Pengolahan Citra Digital berbasis Web">
+    <title>Mini Photoshop — Digital Image Processing</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAVBAR
+     ═══════════════════════════════════════════════════════════════════════ -->
+<nav class="navbar navbar-expand navbar-custom fixed-top">
+    <div class="container-fluid">
+        <span class="navbar-brand-custom">
+            <span class="brand-icon">🎨</span> VisionForge
+        </span>
+
+        <ul class="navbar-nav ms-3 me-auto">
+            <!-- File Menu -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                    <i class="bi bi-folder2-open"></i> File
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="document.getElementById('fileInput').click()">
+                        <i class="bi bi-upload"></i> Open Image</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="new bootstrap.Modal(document.getElementById('saveModal')).show()">
+                        <i class="bi bi-save"></i> Save As...</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="downloadImage()">
+                        <i class="bi bi-download"></i> Download</a></li>
+                    <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08)"></li>
+                    <li><a class="dropdown-item danger" href="#" onclick="resetImage()">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Original</a></li>
+                </ul>
+            </li>
+
+            <!-- Quick Actions -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                    <i class="bi bi-lightning"></i> Quick
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="applyHistogramEq()"><i class="bi bi-bar-chart"></i> Histogram EQ</a></li>
+                    <li style="display:none"><a class="dropdown-item" href="#" onclick="applyGrayscale()"><i class="bi bi-circle-half"></i> Grayscale</a></li>
+                    <li style="display:none"><a class="dropdown-item" href="#" onclick="applyFlip('horizontal')"><i class="bi bi-symmetry-horizontal"></i> Flip H</a></li>
+                    <li style="display:none"><a class="dropdown-item" href="#" onclick="applyFlip('vertical')"><i class="bi bi-symmetry-vertical"></i> Flip V</a></li>
+                    <li style="display:none"><a class="dropdown-item" href="#" onclick="applyEdge('canny')"><i class="bi bi-border-outer"></i> Canny Edge</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Right side -->
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm" style="color:var(--text-secondary);font-size:0.8rem" onclick="toggleHistogram()">
+                <i class="bi bi-graph-up"></i> Histogram
+            </button>
+            <span style="color:var(--text-muted);font-size:0.72rem">Ctrl+O / Ctrl+S / Ctrl+Z</span>
+        </div>
+    </div>
+</nav>
+
+<!-- Hidden File Input -->
+<input type="file" id="fileInput" accept="image/jpeg,image/png,image/bmp" style="display:none">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MAIN LAYOUT
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="app-container" style="margin-top: var(--navbar-height)">
+
+    <!-- ─── SIDEBAR ──────────────────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- 1. Enhancement -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-header" id="sectionEnhance">
+                <i class="bi bi-sun"></i> Enhancement
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <div class="control-group">
+                    <div class="control-label">Brightness <span class="value-display" id="brightnessVal">0</span></div>
+                    <input type="range" id="brightnessSlider" min="-100" max="100" value="0" data-display="brightnessVal">
+                    <button class="btn-action mt-2" onclick="applyBrightness()"><i class="bi bi-check-lg"></i> Apply Brightness</button>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Contrast <span class="value-display" id="contrastVal">1.0</span></div>
+                    <input type="range" id="contrastSlider" min="0.5" max="3.0" step="0.1" value="1.0" data-display="contrastVal">
+                    <button class="btn-action mt-2" onclick="applyContrast()"><i class="bi bi-check-lg"></i> Apply Contrast</button>
+                </div>
+                <button class="btn-action" onclick="applyHistogramEq()"><i class="bi bi-bar-chart-fill"></i> Histogram Equalization</button>
+                <div class="control-group mt-3">
+                    <div class="control-label">Sharpen <span class="value-display" id="sharpenVal">1.0</span></div>
+                    <input type="range" id="sharpenSlider" min="0.1" max="5.0" step="0.1" value="1.0" data-display="sharpenVal">
+                    <button class="btn-action mt-2" onclick="applySharpen()"><i class="bi bi-check-lg"></i> Apply Sharpen</button>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Smooth/Blur</div>
+                    <select class="form-select-custom mb-2" id="smoothMethod">
+                        <option value="gaussian">Gaussian</option>
+                        <option value="median">Median</option>
+                        <option value="bilateral">Bilateral</option>
+                    </select>
+                    <div class="control-label">Kernel Size <span class="value-display" id="smoothKVal">5</span></div>
+                    <input type="range" id="smoothKsize" min="3" max="31" step="2" value="5" data-display="smoothKVal">
+                    <button class="btn-action mt-2" onclick="applySmooth()"><i class="bi bi-check-lg"></i> Apply Smooth</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Geometric Transform -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-arrows-move"></i> Transform
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <div class="control-group">
+                    <div class="control-label">Rotate <span class="value-display" id="rotateVal">0</span>°</div>
+                    <input type="range" id="rotateSlider" min="0" max="360" value="0" data-display="rotateVal">
+                    <div class="control-label mt-1">Interpolation</div>
+                    <select class="form-select-custom mb-2" id="interpMethod">
+                        <option value="bilinear">Bilinear</option>
+                        <option value="nearest">Nearest Neighbor</option>
+                    </select>
+                    <button class="btn-action" onclick="applyRotate()"><i class="bi bi-arrow-repeat"></i> Apply Rotate</button>
+                </div>
+                <div class="btn-row mt-3">
+                    <button class="btn-action" onclick="applyFlip('horizontal')"><i class="bi bi-symmetry-horizontal"></i> Flip H</button>
+                    <button class="btn-action" onclick="applyFlip('vertical')"><i class="bi bi-symmetry-vertical"></i> Flip V</button>
+                </div>
+                <div class="control-group mt-2">
+                    <div class="control-label">Crop</div>
+                    <div class="btn-row">
+                        <button class="btn-action" id="cropToggleBtn" onclick="toggleCropMode()"><i class="bi bi-crop"></i> Select Area</button>
+                        <button class="btn-action primary" onclick="applyCrop()"><i class="bi bi-scissors"></i> Crop</button>
+                    </div>
+                </div>
+                <div class="control-group mt-2">
+                    <div class="control-label">Resize</div>
+                    <div class="btn-row">
+                        <input type="number" id="resizeWidth" placeholder="Width" min="1">
+                        <input type="number" id="resizeHeight" placeholder="Height" min="1">
+                    </div>
+                    <button class="btn-action mt-1" onclick="applyResize()"><i class="bi bi-aspect-ratio"></i> Apply Resize</button>
+                </div>
+                <div class="control-group mt-2">
+                    <div class="control-label">Translate (Shift)</div>
+                    <div class="btn-row">
+                        <input type="number" id="translateX" placeholder="X offset" value="0">
+                        <input type="number" id="translateY" placeholder="Y offset" value="0">
+                    </div>
+                    <button class="btn-action mt-1" onclick="applyTranslate()"><i class="bi bi-arrows-move"></i> Apply Translate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Restoration -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-magic"></i> Restoration
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <div class="control-group">
+                    <div class="control-label">Kernel Size <span class="value-display" id="restoreKVal">5</span></div>
+                    <input type="range" id="restoreKsize" min="3" max="31" step="2" value="5" data-display="restoreKVal">
+                </div>
+                <div class="btn-row three-col">
+                    <button class="btn-action" onclick="applyRestore('gaussian')"><i class="bi bi-droplet"></i> Gaussian</button>
+                    <button class="btn-action" onclick="applyRestore('median')"><i class="bi bi-filter"></i> Median</button>
+                    <button class="btn-action" onclick="applyRestore('salt_pepper')"><i class="bi bi-stars"></i> S&P</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Edge & Binary -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-border-outer"></i> Edge & Binary
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <div class="control-group">
+                    <div class="control-label">Threshold <span class="value-display" id="threshVal">128</span></div>
+                    <input type="range" id="thresholdSlider" min="0" max="255" value="128" data-display="threshVal">
+                    <button class="btn-action mt-2" onclick="applyThreshold()"><i class="bi bi-check-lg"></i> Apply Threshold</button>
+                </div>
+                <div class="control-label mt-3">Edge Detection</div>
+                <div class="btn-row mt-1">
+                    <button class="btn-action" onclick="applyEdge('canny')">Canny</button>
+                    <button class="btn-action" onclick="applyEdge('sobel')">Sobel</button>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-action" onclick="applyEdge('prewitt')">Prewitt</button>
+                    <button class="btn-action" onclick="applyEdge('roberts')">Roberts</button>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-action" onclick="applyEdge('laplacian')">Laplacian</button>
+                    <button class="btn-action" onclick="applyEdge('log')">LoG</button>
+                </div>
+                <div class="control-group mt-2">
+                    <div class="control-label">Canny Params</div>
+                    <div class="btn-row">
+                        <input type="number" id="cannyT1" placeholder="T1" value="50" min="0" max="255">
+                        <input type="number" id="cannyT2" placeholder="T2" value="150" min="0" max="255">
+                    </div>
+                </div>
+                <div class="control-group mt-2">
+                    <div class="control-label">LoG Kernel <span class="value-display" id="logKVal">5</span></div>
+                    <input type="range" id="logKsize" min="3" max="15" step="2" value="5" data-display="logKVal">
+                </div>
+                <div class="control-label mt-3">Morphology</div>
+                <div class="control-group mt-1">
+                    <div class="control-label">Kernel <span class="value-display" id="morphKVal">5</span> | Iterations <span class="value-display" id="morphIterVal">1</span></div>
+                    <input type="range" id="morphKsize" min="3" max="15" step="2" value="5" data-display="morphKVal">
+                    <input type="range" id="morphIter" min="1" max="10" value="1" data-display="morphIterVal" class="mt-1">
+                </div>
+                <div class="btn-row">
+                    <button class="btn-action" onclick="applyMorphology('erode')"><i class="bi bi-dash-circle"></i> Erosion</button>
+                    <button class="btn-action" onclick="applyMorphology('dilate')"><i class="bi bi-plus-circle"></i> Dilation</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Color -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-palette"></i> Color
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <button class="btn-action mb-2" onclick="applyGrayscale()"><i class="bi bi-circle-half"></i> Convert to Grayscale</button>
+                <div class="control-label">Channel Split</div>
+                <div class="btn-row three-col mt-1">
+                    <button class="btn-action" style="color:#ef4444" onclick="applySplitChannel('red')">Red</button>
+                    <button class="btn-action" style="color:#22c55e" onclick="applySplitChannel('green')">Green</button>
+                    <button class="btn-action" style="color:#3b82f6" onclick="applySplitChannel('blue')">Blue</button>
+                </div>
+                <div class="control-group mt-3">
+                    <div class="control-label">Hue Shift <span class="value-display" id="hueVal">0</span></div>
+                    <input type="range" id="hueSlider" min="-90" max="90" value="0" data-display="hueVal">
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Saturation <span class="value-display" id="satVal">1.0</span></div>
+                    <input type="range" id="satSlider" min="0.0" max="3.0" step="0.1" value="1.0" data-display="satVal">
+                </div>
+                <button class="btn-action" onclick="applyHueSaturation()"><i class="bi bi-check-lg"></i> Apply Hue/Saturation</button>
+            </div>
+        </div>
+
+        <!-- 6. Segmentation -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-grid-3x3"></i> Segmentation
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <div class="control-group">
+                    <div class="control-label">Threshold <span class="value-display" id="segThreshVal">128</span></div>
+                    <input type="range" id="segThreshold" min="0" max="255" value="128" data-display="segThreshVal">
+                    <button class="btn-action mt-2" onclick="applySegment('threshold')"><i class="bi bi-check-lg"></i> Threshold Segmentation</button>
+                </div>
+                <button class="btn-action mt-2" onclick="applySegment('edge')"><i class="bi bi-border-outer"></i> Edge-based Segmentation</button>
+                <div class="control-group mt-3">
+                    <div class="control-label">Regions (K-Means) <span class="value-display" id="segRegVal">4</span></div>
+                    <input type="range" id="segRegions" min="2" max="16" value="4" data-display="segRegVal">
+                    <button class="btn-action mt-2" onclick="applySegment('region')"><i class="bi bi-grid-3x3-gap"></i> Region Segmentation</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Compression -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-file-zip"></i> Compression
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <div class="control-group">
+                    <div class="control-label">Method</div>
+                    <select class="form-select-custom" id="compressMethod">
+                        <option value="huffman">Huffman Coding</option>
+                        <option value="arithmetic">Arithmetic Coding</option>
+                        <option value="lzw">LZW</option>
+                        <option value="rle">RLE</option>
+                        <option value="quantize">Quantization</option>
+                    </select>
+                </div>
+                <div class="control-group" id="quantLevelsGroup">
+                    <div class="control-label">Quantization Levels <span class="value-display" id="quantVal">16</span></div>
+                    <input type="range" id="quantLevels" min="2" max="64" value="16" data-display="quantVal">
+                </div>
+                <button class="btn-action primary" onclick="applyCompression()"><i class="bi bi-play-fill"></i> Run Compression</button>
+                <div id="compressStats" style="display:none" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- 8. AI Detection -->
+        <div class="sidebar-section" style="display: none;">
+            <div class="sidebar-section-header">
+                <i class="bi bi-robot"></i> AI Detection (CNN)
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+            <div class="sidebar-section-body">
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px">
+                    Object recognition using MobileNetV2 (ImageNet). Detects 1000+ object classes.
+                </p>
+                <button class="btn-action primary" onclick="detectObjects()"><i class="bi bi-eye"></i> Detect Objects</button>
+                <div id="cnnResults" style="display:none" class="mt-3"></div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ─── CANVAS AREA ──────────────────────────────────────────────────── -->
+    <main class="canvas-area">
+        <!-- Preview -->
+        <div class="preview-container">
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="icon">📷</div>
+                    <h3>Open an Image to Start</h3>
+                    <p>Drag & drop an image here, or click to browse. Supports JPG, PNG, BMP.</p>
+                    <button class="btn-action primary mt-3" style="width:auto;padding:10px 24px" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+                        <i class="bi bi-upload"></i> Choose File
+                    </button>
+                </div>
+            </div>
+
+            <!-- Before/After Preview -->
+            <div class="preview-wrapper" id="previewWrapper" style="display:none">
+                <div class="image-panel" id="beforePanel">
+                    <span class="panel-label">Before (Original)</span>
+                    <img id="beforeImage" alt="Original">
+                </div>
+                <div class="image-panel" id="afterPanel" style="position:relative">
+                    <span class="panel-label">After (Processed)</span>
+                    <img id="afterImage" alt="Processed">
+                    <!-- Crop Overlay -->
+                    <div class="crop-overlay" id="cropOverlay">
+                        <div class="crop-rect" id="cropRect" style="display:none"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histogram Panel -->
+        <div class="histogram-panel" id="histogramPanel">
+            <div class="histogram-box">
+                <span class="hist-title">Before</span>
+                <canvas id="histBefore"></canvas>
+            </div>
+            <div class="histogram-box">
+                <span class="hist-title">After</span>
+                <canvas id="histAfter"></canvas>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot" id="statusDot"></span>
+                <span>Ready</span>
+            </div>
+            <div class="status-item" id="statusInfo">No image loaded</div>
+            <div class="status-item" style="margin-left:auto">Mini Photoshop v1.0 — PCD 2024</div>
+        </div>
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODALS
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<!-- Save Modal -->
+<div class="modal fade" id="saveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-save"></i> Save Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="control-group">
+                    <div class="control-label">Filename</div>
+                    <input type="text" id="saveFilename" value="output" class="form-control"
+                           style="background:var(--bg-card);border-color:var(--border-color);color:var(--text-primary)">
+                </div>
+                <div class="control-group mt-3">
+                    <div class="control-label">Format</div>
+                    <select class="form-select-custom" id="saveFormat">
+                        <option value="png">PNG (Lossless)</option>
+                        <option value="jpg">JPEG</option>
+                        <option value="bmp">BMP</option>
+                    </select>
+                </div>
+                <div class="control-group mt-3">
+                    <div class="control-label">Quality <span class="value-display" id="saveQualVal">95</span></div>
+                    <input type="range" id="saveQuality" min="10" max="100" value="95" data-display="saveQualVal">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-action primary" onclick="saveImage()"><i class="bi bi-save"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     LOADING OVERLAY
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing image...</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- App JS -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+</html>
