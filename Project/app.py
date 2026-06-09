@@ -416,12 +416,16 @@ def detect():
     if img is None:
         return error('No image loaded')
 
-    annotated, predictions = detector.detect_and_annotate(img)
+    data = request.get_json(silent=True) or {}
+    category = data.get('category', 'all')
+    top_n = int(data.get('top_n', 5))
+
+    annotated, predictions = detector.detect_and_annotate(img, top_n=top_n, category=category)
     if predictions is None:
         return error('TensorFlow not installed. Run: pip install tensorflow')
 
     save_current(annotated)
-    return success(annotated, extra={'predictions': predictions})
+    return success(annotated, extra={'predictions': predictions, 'category': category})
 
 
 # =============================================================================

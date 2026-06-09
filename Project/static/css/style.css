@@ -1,28 +1,29 @@
 /* =============================================================================
-   Mini Photoshop — Premium Dark Theme with Glassmorphism
+   Lumina Synth — Indigo-Cyan Soft Light Theme
    ============================================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ── CSS Custom Properties ────────────────────────────────────────────────── */
 :root {
-    --bg-primary: #0a0a1a;
-    --bg-secondary: #111128;
-    --bg-card: rgba(255, 255, 255, 0.04);
-    --bg-card-hover: rgba(255, 255, 255, 0.07);
-    --bg-glass: rgba(17, 17, 40, 0.85);
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-active: rgba(102, 126, 234, 0.5);
-    --text-primary: #e8e8f0;
-    --text-secondary: #8888a8;
-    --text-muted: #555570;
-    --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --accent-1: #667eea;
-    --accent-2: #764ba2;
-    --accent-glow: rgba(102, 126, 234, 0.3);
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --danger: #ef4444;
+    --bg-primary: #e4e7ed;
+    --bg-secondary: #dbe0e8;
+    --bg-card: #edf0f5;
+    --bg-card-hover: #d5dae4;
+    --bg-glass: rgba(225, 229, 238, 0.88);
+    --border-color: rgba(60, 70, 120, 0.13);
+    --border-active: rgba(42, 62, 177, 0.40);
+    --text-primary: #1a1d3a;
+    --text-secondary: #3e4462;
+    --text-muted: #7e85a0;
+    --accent-gradient: linear-gradient(135deg, #2d2b7c 0%, #1a6dd4 50%, #00c9a7 100%);
+    --accent-1: #2a3eb1;
+    --accent-2: #1a6dd4;
+    --accent-3: #00c9a7;
+    --accent-glow: rgba(42, 62, 177, 0.15);
+    --success: #00c9a7;
+    --warning: #e0a030;
+    --danger: #d94452;
     --sidebar-width: 320px;
     --navbar-height: 56px;
     --histogram-height: 200px;
@@ -48,10 +49,10 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(60, 70, 120, 0.18);
     border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+::-webkit-scrollbar-thumb:hover { background: rgba(60, 70, 120, 0.30); }
 
 /* ── Navbar ───────────────────────────────────────────────────────────────── */
 .navbar-custom {
@@ -77,8 +78,16 @@ body {
 }
 
 .navbar-brand-custom .brand-icon {
-    font-size: 1.4rem;
-    -webkit-text-fill-color: initial;
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+    border-radius: 0px;
+    box-shadow: 0 2px 8px var(--accent-glow);
+    transition: var(--transition);
+}
+
+.navbar-brand-custom:hover .brand-icon {
+    transform: scale(1.08) rotate(-3deg);
 }
 
 .nav-link {
@@ -101,7 +110,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 6px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 40px rgba(30, 30, 80, 0.18);
 }
 
 .dropdown-item {
@@ -172,7 +181,7 @@ body {
 }
 
 .sidebar-section-header.active {
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(42, 62, 177, 0.08);
     border-color: var(--border-active);
     color: var(--accent-1);
 }
@@ -227,7 +236,7 @@ body {
     font-family: 'SF Mono', 'Consolas', monospace;
     color: var(--accent-1);
     font-size: 0.75rem;
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(42, 62, 177, 0.08);
     padding: 1px 6px;
     border-radius: 4px;
 }
@@ -340,12 +349,12 @@ select.form-select-custom option {
 }
 
 .btn-action.danger {
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(217, 68, 82, 0.3);
     color: var(--danger);
 }
 
 .btn-action.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(217, 68, 82, 0.08);
 }
 
 .btn-row {
@@ -403,7 +412,7 @@ select.form-select-custom option {
     position: absolute;
     top: 10px;
     left: 10px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(26, 29, 58, 0.70);
     backdrop-filter: blur(8px);
     padding: 4px 12px;
     border-radius: 6px;
@@ -412,7 +421,7 @@ select.form-select-custom option {
     text-transform: uppercase;
     letter-spacing: 1px;
     z-index: 5;
-    color: var(--text-secondary);
+    color: #f2efeb;
 }
 
 .image-panel img {
@@ -463,12 +472,12 @@ select.form-select-custom option {
 
 .upload-zone:hover {
     border-color: var(--accent-1);
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(42, 62, 177, 0.05);
 }
 
 .upload-zone.dragover {
     border-color: var(--accent-1);
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(42, 62, 177, 0.10);
     transform: scale(1.02);
 }
 
@@ -573,7 +582,7 @@ select.form-select-custom option {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 10, 26, 0.7);
+    background: rgba(26, 29, 58, 0.50);
     backdrop-filter: blur(4px);
     display: none;
     align-items: center;
@@ -624,7 +633,7 @@ select.form-select-custom option {
     padding: 12px 18px;
     font-size: 0.83rem;
     color: var(--text-primary);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 30px rgba(30, 30, 80, 0.14);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -676,7 +685,7 @@ select.form-select-custom option {
     padding: 12px 20px;
 }
 
-.btn-close { filter: invert(1); }
+/* .btn-close { filter: invert(1); } */
 
 /* ── Crop Canvas Overlay ──────────────────────────────────────────────────── */
 .crop-overlay {
@@ -695,7 +704,7 @@ select.form-select-custom option {
 .crop-rect {
     position: absolute;
     border: 2px dashed var(--accent-1);
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(42, 62, 177, 0.10);
     pointer-events: none;
 }
 

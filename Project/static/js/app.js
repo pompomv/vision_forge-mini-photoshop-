@@ -370,25 +370,73 @@ function displayCompressionStats(stats) {
 // =============================================================================
 
 async function detectObjects() {
-    const data = await apiPost('/api/detect');
+    const category = document.getElementById('cnnCategory').value;
+    const data = await apiPost('/api/detect', { category });
     if (data) {
         updateAfterImage(data.image);
+        displayCategoryInfo(category, data.predictions || []);
         if (data.predictions) {
-            displayPredictions(data.predictions);
+            displayPredictions(data.predictions, category);
         }
-        showToast('Object detection complete!', 'success');
+        const catNames = {
+            all: 'All Objects', person: 'Manusia', animal: 'Hewan',
+            vehicle: 'Kendaraan', food: 'Makanan', nature: 'Alam',
+            electronics: 'Elektronik', furniture: 'Furniture', clothing: 'Pakaian'
+        };
+        showToast(`CNN Detection (${catNames[category] || category}) complete!`, 'success');
     }
 }
 
-function displayPredictions(predictions) {
+function displayCategoryInfo(category, predictions) {
+    const container = document.getElementById('cnnCategoryInfo');
+    if (category === 'all') {
+        container.style.display = 'none';
+        return;
+    }
+    const catNames = {
+        person: '🧑 Manusia / Person', animal: '🐾 Hewan / Animal',
+        vehicle: '🚗 Kendaraan / Vehicle', food: '🍎 Makanan / Food',
+        nature: '🌿 Alam / Nature', electronics: '💻 Elektronik / Electronics',
+        furniture: '🪑 Furniture / Interior', clothing: '👕 Pakaian / Clothing'
+    };
+    const catName = catNames[category] || category;
+
+    if (predictions.length === 0) {
+        container.innerHTML = `
+            <div style="background:rgba(217,68,82,0.08);border:1px solid rgba(217,68,82,0.25);border-radius:8px;padding:10px 12px;font-size:0.78rem;color:var(--danger)">
+                <i class="bi bi-exclamation-triangle"></i>
+                Tidak ditemukan objek kategori <strong>${catName}</strong> pada gambar ini.
+                Coba kategori lain atau gunakan "All Objects".
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.25);border-radius:8px;padding:10px 12px;font-size:0.78rem;color:var(--success)">
+                <i class="bi bi-check-circle"></i>
+                Ditemukan <strong>${predictions.length}</strong> hasil untuk kategori <strong>${catName}</strong>
+            </div>
+        `;
+    }
+    container.style.display = 'block';
+}
+
+function displayPredictions(predictions, category) {
     const container = document.getElementById('cnnResults');
+    if (predictions.length === 0) {
+        container.innerHTML = '<p style="font-size:0.78rem;color:var(--text-muted);text-align:center;padding:12px">No matching predictions found.</p>';
+        container.style.display = 'block';
+        return;
+    }
     let html = '<ul class="prediction-list">';
     predictions.forEach((pred, i) => {
+        const matchBadge = pred.matched_category
+            ? `<span style="font-size:0.65rem;background:rgba(0,201,167,0.12);color:var(--success);padding:2px 6px;border-radius:4px;margin-left:4px">✓ ${pred.matched_category}</span>`
+            : '';
         html += `
             <li class="prediction-item">
                 <div class="prediction-rank">${i + 1}</div>
                 <div style="flex:1">
-                    <div class="prediction-name">${pred.description}</div>
+                    <div class="prediction-name">${pred.description}${matchBadge}</div>
                     <div class="prediction-bar">
                         <div class="prediction-bar-fill" style="width:${pred.confidence}%"></div>
                     </div>
