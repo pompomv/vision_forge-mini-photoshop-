@@ -576,18 +576,46 @@ function initCropTool() {
         const curX = e.clientX - bounds.left;
         const curY = e.clientY - bounds.top;
 
-        // Convert screen coords to image coords
+        // Correctly handle object-fit: contain
         const imgRect = afterImg.getBoundingClientRect();
-        const overlayRect = overlay.getBoundingClientRect();
-        const imgOffX = imgRect.left - overlayRect.left;
-        const imgOffY = imgRect.top - overlayRect.top;
-        const scaleX = afterImg.naturalWidth / imgRect.width;
-        const scaleY = afterImg.naturalHeight / imgRect.height;
+        
+        // Calculate the actual rendered dimensions of the image inside the img element
+        const imgRatio = afterImg.naturalWidth / afterImg.naturalHeight;
+        const containerRatio = imgRect.width / imgRect.height;
+        
+        let renderedWidth, renderedHeight, offsetX, offsetY;
+        
+        if (containerRatio > imgRatio) {
+            // Image is constrained by height
+            renderedHeight = imgRect.height;
+            renderedWidth = imgRect.height * imgRatio;
+            offsetX = (imgRect.width - renderedWidth) / 2;
+            offsetY = 0;
+        } else {
+            // Image is constrained by width
+            renderedWidth = imgRect.width;
+            renderedHeight = imgRect.width / imgRatio;
+            offsetX = 0;
+            offsetY = (imgRect.height - renderedHeight) / 2;
+        }
 
-        const sx = (Math.min(startX, curX) - imgOffX) * scaleX;
-        const sy = (Math.min(startY, curY) - imgOffY) * scaleY;
-        const sw = Math.abs(curX - startX) * scaleX;
-        const sh = Math.abs(curY - startY) * scaleY;
+        const scale = afterImg.naturalWidth / renderedWidth; // Scale is uniform for object-fit: contain
+
+        // Mouse coordinates relative to the img element
+        const overlayRect = overlay.getBoundingClientRect();
+        const imgOffX = imgRect.left - overlayRect.left; // usually 0
+        const imgOffY = imgRect.top - overlayRect.top;   // usually 0
+
+        const minX = Math.min(startX, curX) - imgOffX;
+        const minY = Math.min(startY, curY) - imgOffY;
+        const w = Math.abs(curX - startX);
+        const h = Math.abs(curY - startY);
+
+        // Map to natural image coordinates, removing the letterbox offset
+        const sx = (minX - offsetX) * scale;
+        const sy = (minY - offsetY) * scale;
+        const sw = w * scale;
+        const sh = h * scale;
 
         state.cropRect = {
             x: Math.max(0, Math.round(sx)),

@@ -454,8 +454,21 @@ def get_original():
 # =============================================================================
 
 if __name__ == '__main__':
+    import socket
+    local_ip = "127.0.0.1"
+    try:
+        # Detect local IP by connecting to a dummy external address
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        pass
+
     print("=" * 50)
     print("  Mini Photoshop - Digital Image Processing")
-    print("  Open: http://localhost:5000")
+    print("  Local URL:   http://localhost:5000")
+    print(f"  Network URL: http://{local_ip}:5000")
     print("=" * 50)
+    
     app.run(debug=True, host='0.0.0.0', port=5000)
